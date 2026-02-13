@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Review Sentiment Analysis</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary-color: #9333ea;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --background-color: #0f172a;
+            --card-background: #1e293b;
+            --surface-dark: #0f172a;
+            --surface-light: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border-color: #1e293b;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.5;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 100% 0%, rgba(147, 51, 234, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 100% 100%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 0% 100%, rgba(147, 51, 234, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            background: rgba(30, 41, 59, 0.7);
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+        }
+
+        h1 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 2.5rem;
+            font-size: 2.75rem;
+            font-weight: 700;
+            position: relative;
+            letter-spacing: -0.025em;
+            line-height: 1.2;
+        }
+
+        h1 span {
+            display: block;
+            font-size: 1.125rem;
+            color: var(--primary-color);
+            font-weight: 500;
+            margin-top: 0.5rem;
+            letter-spacing: normal;
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(8px);
+        }
+
+        input[type="text"]:hover, select:hover {
+            border-color: var(--primary-light);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        input[type="text"]:focus, select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        .form-group::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--border-color) 0%, transparent 100%);
+            opacity: 0.5;
+        }
+
+        .analysis-type-container {
+            margin: 2rem 0;
+        }
+
+        .analysis-type-label {
+            display: block;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .analysis-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .analysis-option {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .analysis-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .radio-custom {
+            display: flex;
+            align-items: center;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            background: rgba(30, 41, 59, 0.7);
+            border: 2px solid rgba(99, 102, 241, 0.2);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(12px);
+            height: 100%;
+        }
+
+        .option-icon {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            background: rgba(99, 102, 241, 0.1);
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .option-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+            font-size: 1rem;
+        }
+
+        .option-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .analysis-option input[type="radio"]:checked + .radio-custom {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 1px var(--primary-color),
+                       0 0 20px rgba(99, 102, 241, 0.2);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(147, 51, 234, 0.1));
+        }
+
+        .analysis-option input[type="radio"]:checked + .radio-custom .option-icon {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            transform: scale(1.1);
+        }
+
+        .analysis-option:hover .radio-custom {
+            transform: translateY(-2px);
+            border-color: var(--primary-light);
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.025em;
+            box-shadow: var(--shadow-md);
+            transform: translateY(0);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        button:hover:not(:disabled)::before {
+            transform: translateX(100%);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+        }
+
+        button:disabled {
+            opacity: 0.9;
+            cursor: not-allowed;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .button-loader {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-right: 0.5rem;
+            animation: spin 1s linear infinite;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            flex-shrink: 0;
+            vertical-align: middle;
+        }
+
+        .spinner-text {
+            display: inline;
+            margin-left: 0.25rem;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% { 
+                transform: rotate(360deg);
+            }
+        }
+
+        .button-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        button:disabled .button-text {
+            opacity: 0.95;
+        }
+
+        .spinner-text {
+            display: inline;
+            white-space: nowrap;
+        }
+
+        /* Loading Overlay Styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .loading-content {
+            text-align: center;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1.5rem;
+            border: 5px solid rgba(99, 102, 241, 0.2);
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        .loading-description {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            max-width: 400px;
+        }
+
+        .loading-dots {
+            display: inline-block;
+            animation: dots 1.4s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% {
+                content: '●';
+            }
+            40% {
+                content: '● ●';
+            }
+            60%, 100% {
+                content: '● ● ●';
+            }
+        }
+
+        .results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .sentiment-box {
+            text-align: center;
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            background: var(--card-background);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transform: translateY(0);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+        }
+
+        .sentiment-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.02));
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .sentiment-box::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, currentColor, transparent);
+            z-index: 2;
+        }
+
+        .sentiment-box:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .positive {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.05));
+            border: 2px solid rgba(16, 185, 129, 0.4);
+            color: #10b981;
+        }
+
+        .positive::after {
+            background: linear-gradient(90deg, transparent, #10b981, transparent);
+        }
+
+        .negative {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(239, 68, 68, 0.05));
+            border: 2px solid rgba(239, 68, 68, 0.4);
+            color: #ef4444;
+        }
+
+        .negative::after {
+            background: linear-gradient(90deg, transparent, #ef4444, transparent);
+        }
+
+        .neutral {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(245, 158, 11, 0.05));
+            border: 2px solid rgba(245, 158, 11, 0.4);
+            color: #f59e0b;
+        }
+
+        .neutral::after {
+            background: linear-gradient(90deg, transparent, #f59e0b, transparent);
+        }
+
+        .emoji {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2)) brightness(1.1);
+            animation: float 3s ease-in-out infinite;
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            backdrop-filter: blur(8px);
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(1deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        .sentiment-label {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            opacity: 1;
+        }
+
+        .percent {
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1;
+            margin: 1.5rem 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: -1px;
+        }
+
+        .sentiment-box.positive .percent {
+            color: #10b981;
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .sentiment-box.negative .percent {
+            color: #ef4444;
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .sentiment-box.neutral .percent {
+            color: #f59e0b;
+            text-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .count {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            opacity: 0.9;
+            margin-top: 0.75rem;
+            letter-spacing: 0.3px;
+        }
+
+        .error {
+            color: var(--danger-color);
+            text-align: center;
+            margin-top: 1.5rem;
+            font-weight: 500;
+            background: #fef2f2;
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid #fee2e2;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .review-list {
+            margin-top: 3rem;
+            max-height: 600px;
+            overflow-y: auto;
+            border-radius: 1.5rem;
+            background: var(--card-background);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(16, 185, 129, 0.6) transparent;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            transition: all 0.4s ease;
+        }
+
+        .review-list:hover {
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .review-list h2 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 2rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            background: var(--card-background);
+            padding: 1rem 0;
+            z-index: 10;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.15);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .review-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .review-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .review-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, #10b981, #f59e0b, #ef4444);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .review-list::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(to bottom, #059669, #d97706, #dc2626);
+        }
+
+        .review {
+            padding: 1.75rem;
+            margin: 1.5rem 0;
+            border-radius: 1.2rem;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            border: 2px solid transparent;
+            backdrop-filter: blur(8px);
+        }
+
+        .review::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .review:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .review.positive {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.08));
+            border: 2px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .review.positive:hover {
+            border: 2px solid rgba(16, 185, 129, 0.6);
+        }
+
+        .review.negative {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(239, 68, 68, 0.08));
+            border: 2px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .review.negative:hover {
+            border: 2px solid rgba(239, 68, 68, 0.6);
+        }
+
+        .review.neutral {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(245, 158, 11, 0.08));
+            border: 2px solid rgba(245, 158, 11, 0.4);
+        }
+
+        .review.neutral:hover {
+            border: 2px solid rgba(245, 158, 11, 0.6);
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2.5rem;
+            margin-top: 3.5rem;
+            margin-bottom: 3.5rem;
+        }
+
+        .chart-wrapper {
+            background: var(--card-background);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .chart-wrapper:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .chart-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .chart-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 1.4rem;
+            background: linear-gradient(180deg, #10b981, #f59e0b, #ef4444);
+            border-radius: 2px;
+        }
+
+        .chart-container {
+            position: relative;
+            z-index: 2;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chart-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            line-height: 1.6;
+            position: relative;
+            z-index: 2;
+            opacity: 0.85;
+        }
+
+        #sentiment_pie {
+            width: 100% !important;
+        }
+
+        #aspect_bar {
+            width: 100% !important;
+        }
+
+        #aspect_radar {
+            width: 100% !important;
+        }        .aspect-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .aspect-badge.positive {
+            background: var(--success-color);
+        }
+
+        .aspect-badge.negative {
+            background: var(--danger-color);
+        }
+
+        .aspect-badge.neutral {
+            background: var(--warning-color);
+        }
+
+
+    </style>
+</head>
+<body>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Analyzing Reviews<span class="loading-dots">...</span></div>
+            <div class="loading-description">Processing and analyzing app reviews with advanced sentiment analysis</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Advanced App Review Analysis</h1>
+        
+        <form method="POST">
+            <div class="form-group">
+                <input type="text" name="app_url" placeholder="Enter Google Play Store URL..." required>
+            </div>
+            <div class="form-group analysis-type-container">
+                <label class="analysis-type-label">Analysis Type:</label>
+                <div class="analysis-options">
+                    <label class="analysis-option">
+                        <input type="radio" name="analysis_type" value="quick" checked>
+                        <span class="radio-custom">
+                            <span class="option-icon">⚡</span>
+                            <span class="option-text">
+                                <span class="option-title">Quick Analysis</span>
+                                <span class="option-desc">Fastest results, First 500 reviews</span>
+                            </span>
+                        </span>
+                    </label>
+                    <label class="analysis-option">
+                        <input type="radio" name="analysis_type" value="full">
+                        <span class="radio-custom">
+                            <span class="option-icon">🎯</span>
+                            <span class="option-text">
+                                <span class="option-title">Full Analysis</span>
+                                <span class="option-desc">Maximum accuracy, takes longer,Entire review</span>
+                            </span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <div class="form-group analysis-type-container">
+                <label class="analysis-type-label">Algorithm:</label>
+                <div class="analysis-options">
+                    <label class="analysis-option">
+                        <input type="radio" name="algorithm" value="vader" checked>
+                        <span class="radio-custom">
+                            <span class="option-icon">⚙️</span>
+                            <span class="option-text">
+                                <span class="option-title">VADER</span>
+                                <span class="option-desc">Fast lexicon-based</span>
+                            </span>
+                        </span>
+                    </label>
+                    <label class="analysis-option">
+                        <input type="radio" name="algorithm" value="bert">
+                        <span class="radio-custom">
+                            <span class="option-icon">🧠</span>
+                            <span class="option-text">
+                                <span class="option-title">BERT</span>
+                                <span class="option-desc">Deep learning NLP</span>
+                            </span>
+                        </span>
+                    </label>
+                    <label class="analysis-option">
+                        <input type="radio" name="algorithm" value="lstm">
+                        <span class="radio-custom">
+                            <span class="option-icon">🔄</span>
+                            <span class="option-text">
+                                <span class="option-title">LSTM</span>
+                                <span class="option-desc">Sequence learning</span>
+                            </span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <button type="submit" id="analyzeButton" style="margin-top: 2rem;">
+                <span class="button-text">Analyze Reviews</span>
+            </button>
+        </form>
+
+        {% if app_title %}
+        <div style="text-align: center; margin-top: 20px;">
+            <h2>App: {{ app_title }}</h2>
+            {% if algorithm_used %}
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 10px;">
+                <strong>Algorithm Used:</strong> 
+                <span style="color: var(--primary-color); text-transform: uppercase; font-weight: 600;">
+                    {{ algorithm_used }}
+                </span>
+            </p>
+            {% endif %}
+            {% if analysis_time %}
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 8px;">
+                <strong>Analysis Time:</strong> 
+                <span style="color: #10b981; font-weight: 600;">
+                    {{ analysis_time }} seconds
+                </span>
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="error">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        {% if results %}
+        <div class="results">
+            <div class="sentiment-box positive">
+                <div class="emoji">😊</div>
+                <h3 class="sentiment-label">Positive</h3>
+                <div class="percent">{{ results.positive }}%</div>
+                <p class="count">({{ counts.positive }} reviews)</p>
+            </div>
+            <div class="sentiment-box neutral">
+                <div class="emoji">😐</div>
+                <h3 class="sentiment-label">Neutral</h3>
+                <div class="percent">{{ results.neutral }}%</div>
+                <p class="count">({{ counts.neutral }} reviews)</p>
+            </div>
+            <div class="sentiment-box negative">
+                <div class="emoji">😔</div>
+                <h3 class="sentiment-label">Negative</h3>
+                <div class="percent">{{ results.negative }}%</div>
+                <p class="count">({{ counts.negative }} reviews)</p>
+            </div>
+        </div>
+
+        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(99, 102, 241, 0.1)); border: 2px solid rgba(16, 185, 129, 0.3); border-radius: 1.5rem; padding: 2rem; margin: 2.5rem 0; backdrop-filter: blur(12px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);">
+            <h3 style="margin: 0 0 1rem 0; font-size: 1.3rem; font-weight: 800; color: var(--text-primary); font-family: 'Plus Jakarta Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">📊 Analysis Summary</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                <div style="padding: 1.25rem; background: rgba(255, 255, 255, 0.05); border-radius: 1rem; border-left: 4px solid #10b981;">
+                    <p style="margin: 0 0 0.5rem 0; color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.3px;">Total Reviews</p>
+                    <p style="margin: 0; font-size: 2rem; font-weight: 800; color: var(--text-primary);">{{ counts.total }}</p>
+                </div>
+                <div style="padding: 1.25rem; background: rgba(255, 255, 255, 0.05); border-radius: 1rem; border-left: 4px solid #10b981;">
+                    <p style="margin: 0 0 0.5rem 0; color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.3px;">Overall Sentiment</p>
+                    <p style="margin: 0; font-size: 1.8rem; font-weight: 800; {% if results.positive > results.negative %}color: #10b981;{% elif results.negative > results.positive %}color: #ef4444;{% else %}color: #f59e0b;{% endif %}">
+                        {% if results.positive > results.negative %}POSITIVE 😊{% elif results.negative > results.positive %}NEGATIVE 😔{% else %}NEUTRAL 😐{% endif %}
+                    </p>
+                </div>
+                <div style="padding: 1.25rem; background: rgba(255, 255, 255, 0.05); border-radius: 1rem; border-left: 4px solid #f59e0b;">
+                    <p style="margin: 0 0 0.5rem 0; color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.3px;">Sentiment Balance</p>
+                    <p style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">
+                        {% if (results.positive - results.negative)|abs < 10 %}Balanced{% elif results.positive > results.negative %}Highly Positive{% else %}Highly Negative{% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {% if charts %}
+        <div class="charts-container">
+            <div class="chart-wrapper">
+                <h3 class="chart-title">Sentiment Distribution</h3>
+                <div class="chart-container">
+                    <div id="sentiment_pie"></div>
+                </div>
+                <p class="chart-description">Overall distribution of positive, neutral, and negative sentiments across all reviews analyzed.</p>
+            </div>
+            <div class="chart-wrapper">
+                <h3 class="chart-title">Aspect Sentiment Analysis</h3>
+                <div class="chart-container">
+                    <div id="aspect_bar"></div>
+                </div>
+                <p class="chart-description">Detailed sentiment breakdown for each app aspect including usability, performance, design, and more.</p>
+            </div>
+            <div class="chart-wrapper" style="grid-column: span 2;">
+                <h3 class="chart-title">Aspect Performance Radar</h3>
+                <div class="chart-container">
+                    <div id="aspect_radar"></div>
+                </div>
+                <p class="chart-description">Multi-dimensional view of app performance across all key aspects in a radar chart format.</p>
+            </div>
+        </div>
+
+        {% endif %}
+
+        <script>
+            // Make sentiment data available globally for download function
+            const pageData = {
+                aspectSentiments: {{ aspect_sentiments | tojson if aspect_sentiments else 'null' }},
+                results: null,
+                counts: null,
+                appTitle: null
+            };
+
+            // Download Report Function (PDF only)
+            function downloadReport(format) {
+                // Collect report data from the page
+                const appTitle = document.querySelector('h2')?.innerText?.replace('App: ', '') || 'Unknown';
+                
+                // Extract sentiment results
+                const sentimentBoxes = document.querySelectorAll('.sentiment-box');
+                const results = {};
+                sentimentBoxes.forEach(box => {
+                    const sentiment = box.classList.contains('positive') ? 'positive' : 
+                                    box.classList.contains('negative') ? 'negative' : 'neutral';
+                    const percentText = box.querySelector('.percent')?.innerText || '0';
+                    results[sentiment] = parseFloat(percentText);
+                });
+
+                // Extract counts
+                const counts = {};
+                sentimentBoxes.forEach(box => {
+                    const sentiment = box.classList.contains('positive') ? 'positive' : 
+                                    box.classList.contains('negative') ? 'negative' : 'neutral';
+                    const countText = box.querySelector('.count')?.innerText || '0';
+                    const match = countText.match(/\((\d+)\s+reviews\)/);
+                    counts[sentiment] = match ? parseInt(match[1]) : 0;
+                });
+                
+                // Get total reviews from the analysis summary
+                const summaryText = document.querySelector('[style*="border-radius: 1.5rem"]')?.innerText || '';
+                const totalMatch = summaryText.match(/\d+/);
+                counts.total = totalMatch ? parseInt(totalMatch[0]) : 
+                              (counts.positive || 0) + (counts.neutral || 0) + (counts.negative || 0);
+
+                // Extract detailed reviews (not used in PDF, but included for compatibility)
+                const detailedReviews = [];
+
+                // Get algorithm used
+                const algorithmText = document.querySelector('p:has(strong)')?.innerText || '';
+                const algorithmMatch = algorithmText.match(/(VADER|BERT|LSTM)/);
+                const algorithmUsed = algorithmMatch ? algorithmMatch[1].toLowerCase() : 'vader';
+
+                // Use aspect sentiments from server-side data if available
+                let aspectSentiments = pageData.aspectSentiments || {};
+                
+                // If pageData doesn't have it, try to extract from chart
+                if (!aspectSentiments || Object.keys(aspectSentiments).length === 0) {
+                    try {
+                        const barChartDiv = document.getElementById('aspect_bar');
+                        if (barChartDiv && barChartDiv.data && barChartDiv.data.length > 0) {
+                            const chartData = barChartDiv.data;
+                            const xAxisLabels = chartData[0].x || [];
+                            
+                            xAxisLabels.forEach((aspect, index) => {
+                                if (aspect && aspect.trim()) {
+                                    const aspectKey = aspect.toLowerCase();
+                                    aspectSentiments[aspectKey] = {
+                                        positive: chartData[0].y && chartData[0].y[index] ? chartData[0].y[index] : 0,
+                                        neutral: chartData[1].y && chartData[1].y[index] ? chartData[1].y[index] : 0,
+                                        negative: chartData[2].y && chartData[2].y[index] ? chartData[2].y[index] : 0
+                                    };
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.log('Could not extract aspect data from chart:', e);
+                    }
+                }
+                
+                // Prepare report data
+                const reportData = {
+                    app_title: appTitle,
+                    results: results,
+                    counts: counts,
+                    detailed_reviews: detailedReviews,
+                    aspect_sentiments: aspectSentiments,
+                    algorithm_used: algorithmUsed
+                };
+
+                // Show loading state
+                const button = event.target;
+                const originalText = button.innerText;
+                button.disabled = true;
+                button.innerText = '⏳ Generating PDF...';
+
+                // Send request to backend
+                fetch(`/download_report/pdf`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(reportData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    // Create download link
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    
+                    // Generate filename with timestamp
+                    const timestamp = new Date().toISOString().slice(0, 10);
+                    a.download = `Sentiment_Report_${appTitle.replace(/\s+/g, '_')}_${timestamp}.pdf`;
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    // Reset button
+                    button.disabled = false;
+                    button.innerText = originalText;
+                    
+                    // Show success message
+                    showNotification(`PDF downloaded successfully!`, 'success');
+                })
+                .catch(error => {
+                    console.error('Error downloading report:', error);
+                    button.disabled = false;
+                    button.innerText = originalText;
+                    showNotification(`Error downloading report: ${error.message}`, 'error');
+                });
+            }
+
+            // Notification function
+            function showNotification(message, type) {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 1rem 1.5rem;
+                    background: ${type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #ef4444, #dc2626)'};
+                    color: white;
+                    border-radius: 0.75rem;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                    font-weight: 600;
+                    z-index: 9999;
+                    animation: slideIn 0.3s ease;
+                `;
+                notification.innerText = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => document.body.removeChild(notification), 300);
+                }, 3000);
+            }
+
+            // Add animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                @keyframes slideOut {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                }
+                button:disabled {
+                    opacity: 0.7;
+                    cursor: not-allowed;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Form submission handler for loading button
+            document.querySelector('form').addEventListener('submit', function(e) {
+                const btn = document.getElementById('analyzeButton');
+                const btnText = btn.querySelector('.button-text');
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                
+                // Disable button and show loading state
+                btn.disabled = true;
+                btnText.innerHTML = '<span class="button-loader"></span><span class="spinner-text">Analyzing Reviews...</span>';
+                
+                // Show loading overlay
+                loadingOverlay.classList.add('show');
+                
+                // Scroll to top to show loading overlay
+                setTimeout(function() {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 50);
+            });
+
+            // Reset Application Function
+            function resetApplication() {
+                // Clear form inputs
+                document.querySelector('form').reset();
+                
+                // Reload the page to show initial state
+                location.reload();
+            }
+
+            var charts = {{ charts | tojson | safe if charts else 'null' }};
+            if (charts) {
+                // Enhanced Plotly configuration with professional styling
+                var plotlyConfig = {
+                    responsive: true,
+                    displayModeBar: true,
+                    displaylogo: false,
+                    modeBarButtonsToRemove: ['lasso2d', 'select2d'],
+                    toImageButtonOptions: {
+                        format: 'png',
+                        filename: 'sentiment_analysis_chart',
+                        height: 800,
+                        width: 1200,
+                        scale: 2
+                    }
+                };
+
+                // Professional layout template
+                var baseLayout = {
+                    font: {
+                        family: "'Plus Jakarta Sans', 'Inter', sans-serif",
+                        size: 12,
+                        color: '#cbd5e1'
+                    },
+                    paper_bgcolor: 'rgba(0, 0, 0, 0)',
+                    plot_bgcolor: 'rgba(0, 0, 0, 0)',
+                    margin: {
+                        l: 60,
+                        r: 40,
+                        t: 40,
+                        b: 60
+                    },
+                    showlegend: true,
+                    legend: {
+                        x: 1.05,
+                        y: 1,
+                        font: {
+                            size: 11,
+                            color: '#cbd5e1'
+                        },
+                        bgcolor: 'rgba(30, 41, 59, 0.8)',
+                        bordercolor: 'rgba(255, 255, 255, 0.2)',
+                        borderwidth: 1
+                    }
+                };
+
+                // Parse and enhance sentiment pie chart
+                var pieData = JSON.parse(charts.sentiment_pie);
+                var pieLayout = Object.assign({}, baseLayout, pieData.layout);
+                pieLayout.title = {
+                    text: '',
+                    font: { size: 16 }
+                };
+                if (pieData.data && pieData.data[0]) {
+                    pieData.data[0].marker = {
+                        colors: ['#10b981', '#f59e0b', '#ef4444'],
+                        line: {
+                            color: 'rgba(255, 255, 255, 0.3)',
+                            width: 2
+                        }
+                    };
+                    pieData.data[0].textposition = 'auto';
+                    pieData.data[0].textfont = {
+                        size: 13,
+                        color: '#ffffff',
+                        family: "'Plus Jakarta Sans', sans-serif"
+                    };
+                    pieData.data[0].hovertemplate = '<b>%{label}</b><br>%{value} reviews (%{percent})<extra></extra>';
+                }
+                Plotly.newPlot('sentiment_pie', pieData.data, pieLayout, plotlyConfig);
+
+                // Parse and enhance aspect bar chart
+                var barData = JSON.parse(charts.aspect_bar);
+                var barLayout = Object.assign({}, baseLayout, barData.layout);
+                barLayout.title = { text: '' };
+                barLayout.xaxis = {
+                    title: '',
+                    tickangle: -45,
+                    showgrid: true,
+                    gridcolor: 'rgba(255, 255, 255, 0.1)',
+                    gridwidth: 1
+                };
+                barLayout.yaxis = {
+                    title: 'Count',
+                    showgrid: true,
+                    gridcolor: 'rgba(255, 255, 255, 0.1)',
+                    gridwidth: 1,
+                    zeroline: false
+                };
+                barLayout.hovermode = 'closest';
+                if (barData.data) {
+                    barData.data.forEach(function(trace) {
+                        if (trace.name === 'Positive') {
+                            trace.marker = { color: '#10b981', line: { color: 'rgba(255, 255, 255, 0.3)', width: 1 } };
+                        } else if (trace.name === 'Neutral') {
+                            trace.marker = { color: '#f59e0b', line: { color: 'rgba(255, 255, 255, 0.3)', width: 1 } };
+                        } else if (trace.name === 'Negative') {
+                            trace.marker = { color: '#ef4444', line: { color: 'rgba(255, 255, 255, 0.3)', width: 1 } };
+                        }
+                        trace.hovertemplate = '<b>%{x}</b><br>%{fullData.name}: %{y}<extra></extra>';
+                    });
+                }
+                Plotly.newPlot('aspect_bar', barData.data, barLayout, plotlyConfig);
+
+                // Parse and enhance radar chart
+                var radarData = JSON.parse(charts.aspect_radar);
+                var radarLayout = Object.assign({}, baseLayout, radarData.layout);
+                radarLayout.title = { text: '' };
+                radarLayout.polar = {
+                    radialaxis: {
+                        visible: true,
+                        range: [0, 1],
+                        showline: true,
+                        linecolor: 'rgba(255, 255, 255, 0.2)',
+                        gridcolor: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    angularaxis: {
+                        tickfont: {
+                            size: 11
+                        }
+                    }
+                };
+                if (radarData.data) {
+                    radarData.data.forEach(function(trace) {
+                        trace.fill = 'toself';
+                        trace.line = {
+                            color: trace.name === 'Positive' ? '#10b981' : (trace.name === 'Negative' ? '#ef4444' : '#f59e0b'),
+                            width: 2
+                        };
+                        trace.fillcolor = trace.name === 'Positive' ? 'rgba(16, 185, 129, 0.3)' : (trace.name === 'Negative' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(245, 158, 11, 0.3)');
+                        trace.hovertemplate = '<b>%{customdata}</b><br>%{r:.2f}<extra></extra>';
+                    });
+                }
+                Plotly.newPlot('aspect_radar', radarData.data, radarLayout, plotlyConfig);
+
+                // Responsive resizing
+                window.addEventListener('resize', function() {
+                    Plotly.Plots.resize('sentiment_pie');
+                    Plotly.Plots.resize('aspect_bar');
+                    Plotly.Plots.resize('aspect_radar');
+                });
+            }
+        </script>
+        {% endif %}
+
+        {% if detailed_reviews %}
+        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(147, 51, 234, 0.15)); border: 2px solid rgba(99, 102, 241, 0.3); border-radius: 1.5rem; padding: 1.75rem; margin: 3rem 0 2.5rem 0; backdrop-filter: blur(12px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap;">
+            <div>
+                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.2rem; font-weight: 800; color: var(--text-primary); font-family: 'Plus Jakarta Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">📥 Download Report</h3>
+                <p style="margin: 0; color: var(--text-secondary); font-size: 0.95rem;">Download comprehensive sentiment analysis report</p>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button type="button" onclick="downloadReport('pdf')" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); padding: 0.875rem 1.75rem; border-radius: 0.75rem; border: none; color: white; font-weight: 600; cursor: pointer; font-size: 0.95rem; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); text-transform: uppercase; letter-spacing: 0.025em; display: flex; align-items: center; gap: 0.5rem;">
+                    📄 Download PDF
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if detailed_reviews %}
+        <div class="review-list">
+            <h2>Individual Review Analysis</h2>
+            {% for review in detailed_reviews %}
+            <div class="review {{ review.sentiment }}">
+                <div style="position: relative; z-index: 2;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                        <p style="margin: 0; flex: 1; font-size: 1rem; line-height: 1.6; color: var(--text-secondary);">{{ review.text }}</p>
+                        <span style="background: rgba(255, 255, 255, 0.1); padding: 0.5rem 1rem; border-radius: 0.75rem; font-weight: 700; text-transform: uppercase; font-size: 0.9rem; margin-left: 1rem; white-space: nowrap;">
+                            {{ review.sentiment|upper }}
+                        </span>
+                    </div>
+                    {% if review.aspects %}
+                    <div style="margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        <strong style="color: var(--text-primary); font-size: 0.9rem; text-transform: uppercase; display: block; margin-bottom: 0.75rem;">Aspects Detected:</strong>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                            {% for aspect, score in review.aspects.items() %}
+                                {% set sentiment = 'positive' if score >= 0.05 else ('negative' if score <= -0.05 else 'neutral') %}
+                                <span class="aspect-badge {{ sentiment }}" style="background: {% if sentiment == 'positive' %}rgba(16, 185, 129, 0.25){% elif sentiment == 'negative' %}rgba(239, 68, 68, 0.25){% else %}rgba(245, 158, 11, 0.25){% endif %}; border: 1px solid {% if sentiment == 'positive' %}rgba(16, 185, 129, 0.5){% elif sentiment == 'negative' %}rgba(239, 68, 68, 0.5){% else %}rgba(245, 158, 11, 0.5){% endif %}; color: {% if sentiment == 'positive' %}#10b981{% elif sentiment == 'negative' %}#ef4444{% else %}#f59e0b{% endif %};">{{ aspect }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Hide loading overlay when page has results
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const appTitle = document.querySelector('h2');
+            const analyzeButton = document.getElementById('analyzeButton');
+            
+            // If there are results displayed, hide the loading overlay
+            if (appTitle) {
+                loadingOverlay.classList.remove('show');
+                // Reset button state
+                analyzeButton.disabled = false;
+                analyzeButton.querySelector('.button-text').innerHTML = 'Analyze Reviews';
+            }
+        });
+    </script>
+</body>
+</html>
